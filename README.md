@@ -58,7 +58,7 @@ Before assigning any access, the admin account itself was cleaned up. It carried
 
 Before, the account shows both roles; after, only Global Administrator remains. Note there is no Groups column populated yet, because this step happens before any groups are created:
 
-![Role cleanup before and after](./screenshots/02-access-report.png)
+![Role cleanup before and after](./screenshots/03-access-report.png)
 
 
 ### 3. Assign group membership (Mover)
