@@ -61,6 +61,37 @@ foreach ($g in $groups) {
     catch { $actions += "Remove from $($g.DisplayName) FAILED: $($_.Exception.Message)" }
 }
 
+# 4. Remove assigned licenses (reclaim cost)
+try {
+    $lic = Get-MgUserLicenseDetail -UserId $user.Id
+    if ($lic) {
+        $skus = $lic.SkuId
+        Set-MgUserLicense -UserId $user.Id -AddLicenses @() -RemoveLicenses $skus -ErrorAction Stop | Out-Null
+        $actions += "Licenses removed ($($skus.Count))"
+        Write-Host "Removed $($skus.Count) license(s)" -ForegroundColor Green
+    } else {
+        $actions += "No licenses to remove"
+    }
+}
+catch { $actions += "License removal FAILED: $($_.Exception.Message)" }
+
+# 5. Hide from Global Address List
+try {
+    Update-MgUser -UserId $user.Id `
+        -AdditionalProperties @{ showInAddressList = $false } -ErrorAction Stop
+    $actions += "Hidden from GAL"
+    Write-Host "Hidden from address list" -ForegroundColor Green
+}
+catch { $actions += "GAL hide FAILED: $($_.Exception.Message)" }
+
+# 6. Clear the manager attribute
+try {
+    Remove-MgUserManagerByRef -UserId $user.Id -ErrorAction Stop
+    $actions += "Manager cleared"
+    Write-Host "Cleared manager" -ForegroundColor Green
+}
+catch { $actions += "Manager clear skipped/failed: $($_.Exception.Message)" }
+
 # Offboarding record for audit trail
 [pscustomobject]@{
     User          = $UserPrincipalName
