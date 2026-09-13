@@ -70,7 +70,6 @@ Produces the access report tying the whole toolkit together: users created by sc
 
 The report is also how the least-privilege cleanup was verified. Before, the admin account carried both Global Administrator and the redundant Groups Administrator; after removal, only Global Administrator remains:
 
-![Role cleanup before and after](./screenshots/04-role-cleanup.png)
 
 ### 4. Export audit logs (Audit)
 
