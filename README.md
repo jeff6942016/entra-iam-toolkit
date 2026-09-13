@@ -46,7 +46,7 @@ Built and tested against a live Entra ID tenant. Each script below is shown runn
 
 Reads users from CSV, generates a random temp password per user with force-change-on-first-signin, and writes a provisioning report. Failed rows are reported honestly rather than falsely marked created.
 
-![Bulk user creation](docs/screenshots/01-bulk-create.png)
+![Bulk user creation](./screenshots/01-bulk-create.png)
 
 ### 2. Assign group membership (Mover)
 
@@ -56,7 +56,7 @@ Reads users from CSV, generates a random temp password per user with force-chang
 
 Creates each security group if it does not exist, then adds users. The script is idempotent: a second run reports "already a member" instead of erroring or duplicating, which makes it safe to schedule.
 
-![Group membership automation](docs/screenshots/02-group-membership.png)
+![Group membership automation](./screenshots/02-group-membership.png)
 
 ### 3. Report on access (Governance)
 
@@ -66,11 +66,11 @@ Creates each security group if it does not exist, then adds users. The script is
 
 Produces the access report tying the whole toolkit together: users created by script 1, placed in groups by script 2, surfaced here with their full access, roles, and account status.
 
-![Access report](docs/screenshots/03-access-report.png)
+![Access report](./screenshots/03-access-report.png)
 
 The report is also how the least-privilege cleanup was verified. Before, the admin account carried both Global Administrator and the redundant Groups Administrator; after removal, only Global Administrator remains:
 
-![Role cleanup before and after](docs/screenshots/04-role-cleanup.png)
+![Role cleanup before and after](./screenshots/04-role-cleanup.png)
 
 ### 4. Export audit logs (Audit)
 
@@ -80,7 +80,7 @@ The report is also how the least-privilege cleanup was verified. Before, the adm
 
 Exports the directory audit log to CSV. The output is a timestamped, attributed record of every change made to the tenant, including the operations performed by the other scripts. Sign-in log export is attempted too, and skips gracefully on a Free-tier tenant.
 
-![Audit log export](docs/screenshots/05-audit-export.png)
+![Audit log export](./screenshots/05-audit-export.png)
 
 ### 5. Offboard a user (Leaver)
 
@@ -92,7 +92,7 @@ Runs the full leaver workflow: disables the account, revokes active sessions and
 
 The access report immediately after shows the leaver stripped of all groups while other users are untouched, which is exactly the state change an auditor verifies:
 
-![Offboarding with before/after](docs/screenshots/06-offboard.png)
+![Offboarding with before/after](./screenshots/06-offboard.png)
 
 ## Design decisions
 
