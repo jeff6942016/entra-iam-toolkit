@@ -12,6 +12,45 @@ Built and tested against a live Entra ID tenant. Each script below is shown runn
 - **Audit and evidence:** exporting the directory audit log, so the toolkit produces the proof that its own operations happened
 - **Engineering judgement:** idempotent scripts, graceful handling of licensing limits, disable-not-delete offboarding, and a documented debugging trail (see [Troubleshooting](#troubleshooting-and-lessons-learned))
 
+## Architecture
+
+The five scripts map to the joiner-mover-leaver lifecycle. Every mutating operation is recorded in the Entra ID audit log, which the export script reads back out as evidence.
+
+```mermaid
+flowchart TD
+    classDef stage fill:#eef2f7,stroke:#5b6b7f,stroke-width:1px,color:#1a2a3a;
+    classDef data fill:#f6f1e7,stroke:#a58a5b,stroke-width:1px,color:#3a2f1a;
+    classDef store fill:#e9f0ea,stroke:#5b7f63,stroke-width:1px,color:#1a3a25;
+    classDef log fill:#f3ecef,stroke:#8f5b73,stroke-width:1px,color:#3a1a2b;
+
+    UsersCsv["users.csv"]:::data
+    GroupsCsv["group-assignments.csv"]:::data
+
+    Create["Provision users<br/><b>New-BulkUser.ps1</b>"]:::stage
+    Groups["Assign groups<br/><b>Set-GroupMembership.ps1</b>"]:::stage
+    Report["Report on access<br/><b>Get-AccessReport.ps1</b>"]:::stage
+    Offboard["Offboard user<br/><b>Disable-User.ps1</b>"]:::stage
+    Export["Export logs<br/><b>Export-Logs.ps1</b>"]:::stage
+
+    Directory[("Entra ID directory<br/>users and groups")]:::store
+    AuditLog[("Entra ID<br/>audit log")]:::log
+    ReportCsv["access-report.csv"]:::data
+    AuditCsv["audit-log.csv"]:::data
+
+    UsersCsv --> Create --> Directory
+    GroupsCsv --> Groups
+    Directory --> Groups --> Directory
+    Directory --> Report --> ReportCsv
+    Directory --> Offboard --> Directory
+
+    Create -. "records change" .-> AuditLog
+    Groups -. "records change" .-> AuditLog
+    Offboard -. "records change" .-> AuditLog
+    AuditLog -. "read back as evidence" .-> Export --> AuditCsv
+```
+
+---
+
 ## The scripts
 
 | Script | Lifecycle stage | What it does |
