@@ -48,7 +48,20 @@ Reads users from CSV, generates a random temp password per user with force-chang
 
 ![Bulk user creation](./screenshots/01-bulk-create.png)
 
-### 2. Assign group membership (Mover)
+### 2. Least-privilege cleanup (Governance)
+
+Before assigning any access, the admin account itself was cleaned up. It carried both Global Administrator and a redundant Groups Administrator role, which Global Administrator already fully includes. The narrower role was removed in the Entra admin center and the change verified with the access report:
+
+```powershell
+./scripts/Get-AccessReport.ps1
+```
+
+Before, the account shows both roles; after, only Global Administrator remains. Note there is no Groups column populated yet, because this step happens before any groups are created:
+
+![Role cleanup before and after](./screenshots/02-access-report.png)
+
+
+### 3. Assign group membership (Mover)
 
 ```powershell
 ./scripts/Set-GroupMembership.ps1 -CsvPath ./samples/group-assignments.csv
@@ -58,20 +71,18 @@ Creates each security group if it does not exist, then adds users. The script is
 
 ![Group membership automation](./screenshots/02-group-membership.png)
 
-### 3. Report on access (Governance)
+### 4. Report on access (Governance)
 
 ```powershell
 ./scripts/Get-AccessReport.ps1
 ```
 
-Produces the access report tying the whole toolkit together: users created by script 1, placed in groups by script 2, surfaced here with their full access, roles, and account status.
+The access report that ties the toolkit together: users created in step 1, placed in groups in step 3, surfaced here with their full group memberships, directory roles, and account status. This is the "who has access to what" view an IAM analyst produces constantly, and the Groups column is now populated because the memberships exist:
 
-![Access report](./screenshots/03-access-report.png)
-
-The report is also how the least-privilege cleanup was verified. Before, the admin account carried both Global Administrator and the redundant Groups Administrator; after removal, only Global Administrator remains:
+![Access report](./screenshots/04-access-report.png)
 
 
-### 4. Export audit logs (Audit)
+### 5. Export audit logs (Audit)
 
 ```powershell
 ./scripts/Export-Logs.ps1
@@ -81,7 +92,7 @@ Exports the directory audit log to CSV. The output is a timestamped, attributed 
 
 ![Audit log export](./screenshots/05-audit-export.png)
 
-### 5. Offboard a user (Leaver)
+### 6. Offboard a user (Leaver)
 
 ```powershell
 ./scripts/Disable-User.ps1 -UserPrincipalName "grace@yourtenant.onmicrosoft.com"
