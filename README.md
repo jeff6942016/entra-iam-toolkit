@@ -99,7 +99,6 @@ Before, the account shows both roles; after, only Global Administrator remains. 
 
 ![Role cleanup before and after](./screenshots/03-access-report.png)
 
-
 ### 3. Assign group membership (Mover)
 
 ```powershell
@@ -110,7 +109,17 @@ Creates each security group if it does not exist, then adds users. The script is
 
 ![Group membership automation](./screenshots/02-group-membership.png)
 
-### 4. Report on access (Governance)
+### 4. Reconcile access to desired state (Mover)
+
+```powershell
+./scripts/Sync-GroupMembership.ps1 -CsvPath ./samples/desired-state.csv
+```
+
+Assigning access is only half of the Mover stage. The harder, more important half is revoking access a user should no longer have, which is how privilege creep accumulates when someone changes roles but keeps their old group memberships. This script reconciles each user's actual memberships against a desired-state CSV: it adds what is missing, removes what should not be there, and leaves correct memberships untouched. Where `Set-GroupMembership.ps1` only grants, this one governs, so a user stripped of a stale group is reported as removed (creep) rather than left over-provisioned.
+
+![Group sync removing privilege creep](./screenshots/07-group-sync.png)
+
+### 5. Report on access (Governance)
 
 ```powershell
 ./scripts/Get-AccessReport.ps1
@@ -120,8 +129,7 @@ The access report that ties the toolkit together: users created in step 1, place
 
 ![Access report](./screenshots/04-access-report.png)
 
-
-### 5. Export audit logs (Audit)
+### 6. Export audit logs (Audit)
 
 ```powershell
 ./scripts/Export-Logs.ps1
@@ -131,18 +139,17 @@ Exports the directory audit log to CSV. The output is a timestamped, attributed 
 
 ![Audit log export](./screenshots/05-audit-export.png)
 
-### 6. Offboard a user (Leaver)
+### 7. Offboard a user (Leaver)
 
 ```powershell
 ./scripts/Disable-User.ps1 -UserPrincipalName "grace@yourtenant.onmicrosoft.com"
 ```
 
-Runs the full leaver workflow: disables the account, revokes active sessions and refresh tokens, and removes all group memberships, writing an offboarding record for the audit trail. It deliberately does **not** delete the object.
+Runs the full enterprise leaver workflow: disables the account, revokes active sessions and refresh tokens, removes all group memberships, removes assigned licenses where present (to reclaim cost), hides the user from the Global Address List, and clears the manager attribute, writing an offboarding record for the audit trail. It deliberately does **not** delete the object, so audit history survives and mailbox or file access can be reassigned during a retention period.
 
 The access report immediately after shows the leaver stripped of all groups while other users are untouched, which is exactly the state change an auditor verifies:
 
 ![Offboarding with before/after](./screenshots/06-offboard.png)
-
 ## Design decisions
 
 - **Disable, don't delete, on offboarding.** Deleting an account immediately destroys audit history and breaks mailbox/file reassignment. The correct leaver action is disable + revoke sessions + strip access, retaining the object for a defined period.
